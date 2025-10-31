@@ -61,7 +61,7 @@ class Sprite {
         // 2. vykreslení vlastního canvasu do hlavního canvasu
         this.ctx.drawImage(
             this.mainCanvas,
-            this.x,              // dx: Cílová X-pozice na mainCtx
+            this.x - this.scaledW / 2,              // dx: Cílová X-pozice na mainCtx
             this.y,              // dy: Cílová Y-pozice na mainCtx
             this.scaledW,        // dw: Cílová šířka
             this.scaledH         // dh: Cílová výška
@@ -70,25 +70,29 @@ class Sprite {
 
     // --- METODA PRO DETEKCI KOLIZE MYŠI (PIXEL-PERFECT) ---
     isClicked(mouseX, mouseY) {
-        // 1. Rychlá kontrola ohraničujícího rámečku (POUŽÍVÁ ZMENŠENÉ ROZMĚRY)
-        if (mouseX < this.x ||
-            mouseX > this.x + this.scaledW || // scaledW
+        const startX = this.x - this.scaledW / 2;
+        const endX = this.x + this.scaledW / 2;
+
+        // 1. Rychlá kontrola ohraničujícího rámečku (Bounding Box)
+        if (mouseX < startX ||
+            mouseX > endX ||
             mouseY < this.y ||
-            mouseY > this.y + this.scaledH) { // scaledH
+            mouseY > this.y + this.scaledH) {
             return false;
         }
 
-        // 2. Pixel-Perfect Hit Test na off-screen Canvasu (this.mainCanvas)
-        // Přepočet souřadnic myši na LOKÁLNÍ souřadnice UVNITŘ off-screen Canvasu (this.mainCanvas).
-        const localX = Math.floor((mouseX - this.x) / this.scale);
+        // 2. Přepočet souřadnic myši na LOKÁLNÍ souřadnice UVNITŘ off-screen Canvasu (1:1)
+        const localX = Math.floor((mouseX - startX) / this.scale);
         const localY = Math.floor((mouseY - this.y) / this.scale);
 
+        // 3. Kontrola alfa kanálu na off-screen Canvasu (Pixel-Perfect)
         try {
+            // Kontrolujeme off-screen kontext, který má čistý obrázek 1:1
             const pixelData = this.mainCtx.getImageData(localX, localY, 1, 1).data;
             const alpha = pixelData[3];
             return alpha > 0;
         } catch (e) {
-            console.error("Chyba při kontrole pixelů:", e);
+            console.error("Chyba při kontrole pixelů (CORS problém?):", e);
             return false;
         }
     }
@@ -140,7 +144,7 @@ function initGame() {
         idle: [{ x: 0, y: 0 }] // Může být jen jeden snímek
     };
 
-    playerSprite = new Sprite(ctx, spriteSheet, 100, 100, 256, 256, animations);
+    playerSprite = new Sprite(ctx, spriteSheet, spriteVerticalPosition(0.25), 500, 256, 256, animations);
 
     canvas.addEventListener('mousemove', (e) => {
 
@@ -182,7 +186,13 @@ function gameLoop() {
     ctx.drawImage(
         background, 0, 0, background.width, background.height,
         0, canvas.height - bgHeight, canvas.width, bgHeight);
+
     drawTarget();
 
     requestAnimationFrame(gameLoop);
+}
+
+function spriteVerticalPosition(t) {
+    const newPosition = 0 + (canvas.width - 0) * t;
+    return newPosition;
 }
