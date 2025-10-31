@@ -1,5 +1,5 @@
 class Sprite {
-    constructor(ctx, image, vertPositionTable, y, frameWidth, frameHeight, animationData) {
+    constructor(ctx, image, frameWidth, frameHeight, animationData) {
         this.ctx = ctx;
         this.image = image;
 
@@ -8,7 +8,7 @@ class Sprite {
         this.xPosId;
         this.x;
 
-        this.y = y;       // Y pozice na hlavním canvasu
+        this.y;       // Y pozice na hlavním canvasu
         this.w = frameWidth;   // Šířka jednoho rámečku (framu)
         this.h = frameHeight;  // Výška jednoho rámečku (framu)
 
@@ -42,8 +42,8 @@ class Sprite {
         this.scale = Math.random() * (0.5 - 0.3) + 0.3;
         this.movespeed = Math.random() * (3 - 1.2) + 1.2;
 
-        this.scaledW = this.w * this.scale;
-        this.scaledH = this.h * this.scale;
+        this.scaledW = Math.floor(this.w * this.scale);
+        this.scaledH = Math.floor(this.h * this.scale);
 
         this.xPosTable = enemySpritesTable.filter(x => x.used === false);
         if (this.xPosTable.length <= 0) {
@@ -53,13 +53,14 @@ class Sprite {
         this.xPosObject = this.xPosTable[Math.floor(Math.random() * this.xPosTable.length)];
         this.xPosId = this.xPosObject.id;
         this.x = this.xPosObject.xPos;
+        this.y = canvas.height - bgHeight;
         enemySpritesTable.find(x => x.id === this.xPosId).used = true;
 
         this.currentFrameIndex = 0;
         this.frameCounter = 0;
 
-        // náhodný váběr god/devil
-        this.spriteStatus.isDevil = Math.random() >= 0.75 ? true : false;
+        // náhodný váběr god/devil 25% že bude god
+        this.spriteStatus.isDevil = Math.random() >= 0.25 ? true : false;
         this.hitSprite();
     }
 
@@ -77,9 +78,14 @@ class Sprite {
         }
         // Posun ducha nahoru
         this.y -= this.movespeed;
-        if (this.y <= 0) {
+        if (this.y <= -50) {
             this.y = canvas.height - bgHeight;
             enemySpritesTable.find(x => x.id === this.xPosId).used = false;
+            if (!this.spriteStatus.isDevil) {
+                score += 2;
+            } else {
+                score -= 2;
+            }
             this.rebornSprite();
         }
     }
@@ -108,22 +114,29 @@ class Sprite {
             this.scaledW,        // dw: Cílová šířka
             this.scaledH         // dh: Cílová výška
         );
+
+        this.ctx.beginPath(); // Start a new path
+        this.ctx.strokeStyle = "red";
+        this.ctx.rect(this.x - this.scaledW / 2, this.y, this.scaledW, this.scaledH); // Add a rectangle to the current path
+        this.ctx.stroke(); // Render the path
+
     }
 
     hitSprite() {
-
         if (this.spriteStatus.isDevil) {
             this.image = spriteSheetDevil;
         }
         else {
-            this.image = spriteSheet;
+            this.image = spriteSheetGod;
         }
     }
 
     // --- METODA PRO DETEKCI KOLIZE MYŠI (PIXEL-PERFECT) ---
     isClicked(mouseX, mouseY) {
-        const startX = this.x - this.scaledW / 2;
-        const endX = this.x + this.scaledW / 2;
+
+        const area = 5;
+        const startX = Math.floor(this.x - this.scaledW / 2);
+        const endX = Math.floor(this.x + this.scaledW / 2);
 
         // 1. Rychlá kontrola ohraničujícího rámečku (Bounding Box)
         if (mouseX < startX ||
@@ -137,15 +150,19 @@ class Sprite {
         const localX = Math.floor((mouseX - startX) / this.scale);
         const localY = Math.floor((mouseY - this.y) / this.scale);
 
-        // 3. Kontrola alfa kanálu na off-screen Canvasu (Pixel-Perfect)
-        try {
-            // Kontrolujeme off-screen kontext, který má čistý obrázek 1:1
-            const pixelData = this.mainCtx.getImageData(localX, localY, 1, 1).data;
-            const alpha = pixelData[3];
-            return alpha > 0;
-        } catch (e) {
-            console.error("Chyba při kontrole pixelů (CORS problém?):", e);
+        // Ověření, že souřadnice jsou v rozsahu canvasu
+        if (localX < 0 || localX >= this.w || localY < 0 || localY >= this.h) {
             return false;
         }
+        // 3. Kontrola alfa kanálu na off-screen Canvasu (Pixel-Perfect)
+        const pixelData = this.mainCtx.getImageData(localX - 10, localY - 10, 20, 20).data;
+
+        let soucetAlfa = 0;
+        for (let index = 3; index < pixelData.length; index += 4) {
+            soucetAlfa += pixelData[index];
+        }
+
+        const prumer = soucetAlfa / (pixelData.length / 4);
+        return prumer > 150;
     }
 }

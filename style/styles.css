@@ -1,15 +1,29 @@
 body {
     margin: 0;
     padding: 0;
-    /* background-color: black; */
+    background-color: black;
 }
 
-#game-container {
+.game-container {
+    position: relative;
     display: flex;
+    flex-direction: column;
     justify-self: center;
     width: 100%;
     max-width: 600px;
-    /* min-height: 98dvh; */
     background-color: black;
     cursor: pointer;
+}
+
+#btnStart {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 1rem;
+    cursor: pointer;
+}
+
+.hiden {
+    display: none;
 }

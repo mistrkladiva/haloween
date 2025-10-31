@@ -16,25 +16,30 @@ const enemySpritesTable = [
 let bgHeight;
 let mousePosition = { x: 0, y: 0, clicked: false };
 
-let imagesToLoad = 3;
+let score = 0;
+
+let imagesToLoad = 4;
 function imageLoaded() {
     imagesToLoad--;
     if (imagesToLoad === 0) {
         //console.log("VŠECHNY OBRÁZKY JSOU ÚSPĚŠNĚ NAČTENY!");
-        initGame();
+        //initGame();
     }
 }
 
-const spriteSheet = new Image();
-const foreground = new Image();
+const spriteSheetGod = new Image();
 const spriteSheetDevil = new Image();
+const sky = new Image();
+const foreground = new Image();
 
-spriteSheet.src = '/images/ghost-spritesheet-256.png';
+spriteSheetGod.src = '/images/ghost-spritesheet-256.png';
 spriteSheetDevil.src = '/images/ghost-devil-spritesheet-256.png';
+sky.src = '/images/game-sky.png';
 foreground.src = '/images/game-bg.png';
 
-spriteSheet.onload = imageLoaded;
+spriteSheetGod.onload = imageLoaded;
 spriteSheetDevil.onload = imageLoaded;
+sky.onload = imageLoaded;
 foreground.onload = imageLoaded;
 
 function initGame() {
@@ -48,6 +53,7 @@ function initGame() {
         { x: 4 * 256, y: 0 },
         { x: 5 * 256, y: 0 },
         { x: 6 * 256, y: 0 },
+        { x: 1 * 256, y: 0 },
     ];
 
     const animations = {
@@ -56,31 +62,8 @@ function initGame() {
     };
 
     for (let index = 0; index < enemySpritesTable.length; index++) {
-        enemySprites.push(new Sprite(ctx, spriteSheet, enemySpritesTable, 500, 256, 256, animations));
+        enemySprites.push(new Sprite(ctx, spriteSheetGod, 256, 256, animations));
     }
-
-    // canvas.addEventListener('mousemove', (e) => {
-    //     const rect = canvas.getBoundingClientRect();
-    //     mousePosition.x = e.clientX - rect.left;
-    //     mousePosition.y = e.clientY - rect.top;
-    // })
-
-    // Detekce kliknutí na sprite ducha
-    // canvas.addEventListener('click', (e) => {
-    //     //e.preventDefault();
-    //     const rect = canvas.getBoundingClientRect();
-    //     const mouseX = e.clientX - rect.left;
-    //     const mouseY = e.clientY - rect.top;
-
-    //     enemySprites.forEach(enemy => {
-    //         if (enemy.isClicked(mouseX, mouseY)) {
-    //             console.log("KLIKNUTO na neprůhlednou část sprite!");
-    //             enemy.spriteStatus.isDevil = !enemy.spriteStatus.isDevil;
-    //             enemy.hitSprite();
-    //             return;
-    //         }
-    //     });
-    // });
 
     // Detekce kliknutí na sprite ducha
     canvas.addEventListener('click', (e) => {
@@ -91,6 +74,14 @@ function initGame() {
     });
 
     gameLoop();
+}
+
+
+function drawScore() {
+    ctx.font = "28px arial";
+    ctx.fillStyle = "red";
+    ctx.textAlign = "center";
+    ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height - 30);
 }
 
 function checkHit() {
@@ -120,6 +111,12 @@ function gameLoop() {
         ctx.drawImage(
             foreground, 0, 0, foreground.width, foreground.height,
             0, canvas.height - bgHeight, canvas.width, bgHeight);
+
+        ctx.drawImage(
+            sky, 0, 0, sky.width, sky.height,
+            0, -40, canvas.width, sky.height * (canvas.width / sky.width));
+
+        drawScore();
     }
 
     requestAnimationFrame(gameLoop);
