@@ -2,6 +2,7 @@ const canvas = document.getElementById('game-canvas');
 const parentCanvas = canvas.parentElement.getBoundingClientRect();
 canvas.width = parentCanvas.width;
 canvas.height = window.innerHeight;
+const rect = canvas.getBoundingClientRect();
 const ctx = canvas.getContext('2d');
 
 let playerSprite;
@@ -13,31 +14,31 @@ const enemySpritesTable = [
     { id: 3, xPos: spriteVerticalPosition(0.9), used: false }];
 
 let bgHeight;
-let mousePosition = { x: 0, y: 0 };
+let mousePosition = { x: 0, y: 0, clicked: false };
 
-let imagesToLoad = 3; // Počet obrázků k načtení
+let imagesToLoad = 3;
 function imageLoaded() {
     imagesToLoad--;
     if (imagesToLoad === 0) {
-        console.log("VŠECHNY OBRÁZKY JSOU ÚSPĚŠNĚ NAČTENY!");
+        //console.log("VŠECHNY OBRÁZKY JSOU ÚSPĚŠNĚ NAČTENY!");
         initGame();
     }
 }
 
 const spriteSheet = new Image();
-const background = new Image();
+const foreground = new Image();
 const spriteSheetDevil = new Image();
 
 spriteSheet.src = '/images/ghost-spritesheet-256.png';
 spriteSheetDevil.src = '/images/ghost-devil-spritesheet-256.png';
-background.src = '/images/game-bg.png';
+foreground.src = '/images/game-bg.png';
 
 spriteSheet.onload = imageLoaded;
 spriteSheetDevil.onload = imageLoaded;
-background.onload = imageLoaded;
+foreground.onload = imageLoaded;
 
 function initGame() {
-    bgHeight = background.height * (canvas.width / background.width);
+    bgHeight = foreground.height * (canvas.width / foreground.width);
 
     const walkFrames = [
         { x: 0, y: 0 },
@@ -54,64 +55,77 @@ function initGame() {
         idle: [{ x: 0, y: 0 }] // Může být jen jeden snímek
     };
 
-    for (let index = 0; index < 4; index++) {
+    for (let index = 0; index < enemySpritesTable.length; index++) {
         enemySprites.push(new Sprite(ctx, spriteSheet, enemySpritesTable, 500, 256, 256, animations));
     }
 
-    canvas.addEventListener('mousemove', (e) => {
+    // canvas.addEventListener('mousemove', (e) => {
+    //     const rect = canvas.getBoundingClientRect();
+    //     mousePosition.x = e.clientX - rect.left;
+    //     mousePosition.y = e.clientY - rect.top;
+    // })
 
-        const rect = canvas.getBoundingClientRect();
-        mousePosition.x = e.clientX - rect.left;
-        mousePosition.y = e.clientY - rect.top;
-    })
+    // Detekce kliknutí na sprite ducha
+    // canvas.addEventListener('click', (e) => {
+    //     //e.preventDefault();
+    //     const rect = canvas.getBoundingClientRect();
+    //     const mouseX = e.clientX - rect.left;
+    //     const mouseY = e.clientY - rect.top;
+
+    //     enemySprites.forEach(enemy => {
+    //         if (enemy.isClicked(mouseX, mouseY)) {
+    //             console.log("KLIKNUTO na neprůhlednou část sprite!");
+    //             enemy.spriteStatus.isDevil = !enemy.spriteStatus.isDevil;
+    //             enemy.hitSprite();
+    //             return;
+    //         }
+    //     });
+    // });
 
     // Detekce kliknutí na sprite ducha
     canvas.addEventListener('click', (e) => {
         e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        enemySprites.forEach(enemy => {
-            if (enemy.isClicked(mouseX, mouseY)) {
-                console.log("KLIKNUTO na neprůhlednou část sprite!");
-                enemy.hitSprite();
-                return;
-            }
-            // else {
-            //     console.log("Kliknuto mimo sprite nebo na průhlednou část.");
-            //     return;
-            // }
-        });
+        mousePosition.x = e.clientX - rect.left;
+        mousePosition.y = e.clientY - rect.top;
+        mousePosition.clicked = true;
     });
 
     gameLoop();
 }
 
-function drawTarget() {
-    ctx.beginPath();
-    ctx.strokeStyle = "red";
-    ctx.arc(mousePosition.x, mousePosition.y, 10, 0, Math.PI * 2);
-    ctx.stroke();
+function checkHit() {
+    for (const enemy of enemySprites) {
+        if (enemy.isClicked(mousePosition.x, mousePosition.y)) {
+            console.log("KLIKNUTO na neprůhlednou část sprite!");
+            enemy.spriteStatus.isDevil = !enemy.spriteStatus.isDevil;
+            enemy.hitSprite();
+            break;
+        }
+    }
+    mousePosition.clicked = false;
 }
 
 function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (mousePosition.clicked) {
+        checkHit();
+    }
+    else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    enemySprites.forEach(enemy => {
-        enemy.update();
-        enemy.draw();
-    });
+        enemySprites.forEach(enemy => {
+            enemy.update();
+            enemy.draw();
+        });
 
-    ctx.drawImage(
-        background, 0, 0, background.width, background.height,
-        0, canvas.height - bgHeight, canvas.width, bgHeight);
-
-    drawTarget();
+        ctx.drawImage(
+            foreground, 0, 0, foreground.width, foreground.height,
+            0, canvas.height - bgHeight, canvas.width, bgHeight);
+    }
 
     requestAnimationFrame(gameLoop);
 }
 
+// interpolace na šířku canvasu
 function spriteVerticalPosition(t) {
     const newPosition = 0 + (canvas.width - 0) * t;
     return newPosition;
