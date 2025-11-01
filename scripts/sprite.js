@@ -39,6 +39,7 @@ class Sprite {
     }
 
     rebornSprite() {
+        ghosts.ghostSum++;
         this.scale = Math.random() * (0.5 - 0.3) + 0.3;
         this.movespeed = Math.random() * (3 - 1.2) + 1.2;
 
@@ -59,8 +60,8 @@ class Sprite {
         this.currentFrameIndex = 0;
         this.frameCounter = 0;
 
-        // náhodný váběr god/devil 25% že bude god
-        this.spriteStatus.isDevil = Math.random() >= 0.25 ? true : false;
+        // náhodný váběr god/devil 15% že bude god
+        this.spriteStatus.isDevil = Math.random() >= 0.15 ? true : false;
         this.hitSprite();
     }
 
@@ -82,9 +83,11 @@ class Sprite {
             this.y = canvas.height - bgHeight;
             enemySpritesTable.find(x => x.id === this.xPosId).used = false;
             if (!this.spriteStatus.isDevil) {
-                score += 2;
+                ghosts.ghostGods++;
+                //score += 2;
             } else {
-                score -= 2;
+                ghosts.ghostDevils++;
+                //score -= 2;
             }
             this.rebornSprite();
         }
@@ -115,10 +118,10 @@ class Sprite {
             this.scaledH         // dh: Cílová výška
         );
 
-        this.ctx.beginPath(); // Start a new path
-        this.ctx.strokeStyle = "red";
-        this.ctx.rect(this.x - this.scaledW / 2, this.y, this.scaledW, this.scaledH); // Add a rectangle to the current path
-        this.ctx.stroke(); // Render the path
+        // this.ctx.beginPath(); // Start a new path
+        // this.ctx.strokeStyle = "red";
+        // this.ctx.rect(this.x - this.scaledW / 2, this.y, this.scaledW, this.scaledH); // Add a rectangle to the current path
+        // this.ctx.stroke(); // Render the path
 
     }
 

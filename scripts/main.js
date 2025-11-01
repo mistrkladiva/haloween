@@ -16,7 +16,8 @@ const enemySpritesTable = [
 let bgHeight;
 let mousePosition = { x: 0, y: 0, clicked: false };
 
-let score = 0;
+//let score = 0;
+let ghosts = { ghostSum: 0, ghostGods: 2, ghostDevils: 2 };
 
 let imagesToLoad = 4;
 function imageLoaded() {
@@ -76,12 +77,57 @@ function initGame() {
     gameLoop();
 }
 
+// function drawScore() {
+//     ctx.font = "28px arial";
+//     ctx.fillStyle = "red";
+//     ctx.textAlign = "center";
+//     ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height - 30);
+// }
 
-function drawScore() {
-    ctx.font = "28px arial";
+function drawScoreBar() {
+    const bartWidth = 250;
+    const barWidthHalf = bartWidth / 2;
+
+    const bar = {
+        x: canvas.width / 2 - barWidthHalf,
+        y: canvas.height - 60,
+        width: bartWidth,
+        height: 25
+    }
+    const devilPercent = ghosts.ghostDevils / ghosts.ghostSum;
+
+    let devilBarWidth = vericalInterpolation(0, bar.width, devilPercent);
+
+    ctx.strokeStyle = "green";
+    ctx.fillStyle = "green";
+    ctx.beginPath();
+    ctx.roundRect(bar.x, bar.y, bar.width, bar.height, 5);
+    ctx.fill();
+
+    ctx.strokeStyle = "red";
     ctx.fillStyle = "red";
-    ctx.textAlign = "center";
-    ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height - 30);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(bar.x, bar.y, devilBarWidth, bar.height, 5);
+    ctx.stroke();
+    ctx.fill();
+
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(vericalInterpolation(bar.x, bar.x + bar.width, 0.25), bar.y);
+    ctx.lineTo(vericalInterpolation(bar.x, bar.x + bar.width, 0.25), bar.y + bar.height);
+    ctx.moveTo(vericalInterpolation(bar.x, bar.x + bar.width, 0.75), bar.y);
+    ctx.lineTo(vericalInterpolation(bar.x, bar.x + bar.width, 0.75), bar.y + bar.height);
+    ctx.stroke();
+
+
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(vericalInterpolation(bar.x, bar.x + bar.width, 0.5), bar.y);
+    ctx.lineTo(vericalInterpolation(bar.x, bar.x + bar.width, 0.5), bar.y + bar.height);
+    ctx.stroke();
 }
 
 function checkHit() {
@@ -116,7 +162,8 @@ function gameLoop() {
             sky, 0, 0, sky.width, sky.height,
             0, -40, canvas.width, sky.height * (canvas.width / sky.width));
 
-        drawScore();
+        //drawScore();
+        drawScoreBar();
     }
 
     requestAnimationFrame(gameLoop);
@@ -126,4 +173,7 @@ function gameLoop() {
 function spriteVerticalPosition(t) {
     const newPosition = 0 + (canvas.width - 0) * t;
     return newPosition;
+}
+function vericalInterpolation(x1, x2, t) {
+    return x1 + (x2 - x1) * t;
 }
