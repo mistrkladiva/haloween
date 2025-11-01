@@ -41,7 +41,9 @@ class Sprite {
     rebornSprite() {
         ghosts.ghostSum++;
         this.scale = Math.random() * (0.5 - 0.3) + 0.3;
-        this.movespeed = Math.random() * (3 - 1.2) + 1.2;
+        let moveSpeedMin = 1.2 * speedMultipiler;
+        let moveSpeedMax = 3 * speedMultipiler;
+        this.movespeed = Math.random() * (moveSpeedMax - moveSpeedMin) + moveSpeedMin;
 
         this.scaledW = Math.floor(this.w * this.scale);
         this.scaledH = Math.floor(this.h * this.scale);
@@ -148,24 +150,31 @@ class Sprite {
             mouseY > this.y + this.scaledH) {
             return false;
         }
-
-        // 2. Přepočet souřadnic myši na LOKÁLNÍ souřadnice UVNITŘ off-screen Canvasu (1:1)
-        const localX = Math.floor((mouseX - startX) / this.scale);
-        const localY = Math.floor((mouseY - this.y) / this.scale);
-
-        // Ověření, že souřadnice jsou v rozsahu canvasu
-        if (localX < 0 || localX >= this.w || localY < 0 || localY >= this.h) {
-            return false;
-        }
-        // 3. Kontrola alfa kanálu na off-screen Canvasu (Pixel-Perfect)
-        const pixelData = this.mainCtx.getImageData(localX - 10, localY - 10, 20, 20).data;
-
-        let soucetAlfa = 0;
-        for (let index = 3; index < pixelData.length; index += 4) {
-            soucetAlfa += pixelData[index];
+        // kontrola kliknutí v rámečku
+        if (mouseX > startX ||
+            mouseX < endX ||
+            mouseY > this.y ||
+            mouseY < this.y + this.scaledH) {
+            return true;
         }
 
-        const prumer = soucetAlfa / (pixelData.length / 4);
-        return prumer > 150;
+        // // 2. Přepočet souřadnic myši na LOKÁLNÍ souřadnice UVNITŘ off-screen Canvasu (1:1)
+        // const localX = Math.floor((mouseX - startX) / this.scale);
+        // const localY = Math.floor((mouseY - this.y) / this.scale);
+
+        // // Ověření, že souřadnice jsou v rozsahu canvasu
+        // if (localX < 0 || localX >= this.w || localY < 0 || localY >= this.h) {
+        //     return false;
+        // }
+        // // 3. Kontrola alfa kanálu na off-screen Canvasu (Pixel-Perfect)
+        // const pixelData = this.mainCtx.getImageData(localX - 10, localY - 10, 20, 20).data;
+
+        // let soucetAlfa = 0;
+        // for (let index = 3; index < pixelData.length; index += 4) {
+        //     soucetAlfa += pixelData[index];
+        // }
+
+        // const prumer = soucetAlfa / (pixelData.length / 4);
+        // return prumer > 150;
     }
 }
