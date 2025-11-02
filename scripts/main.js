@@ -92,7 +92,6 @@ function initGame() {
         enemySprites.push(new Sprite(ctx, spriteSheetGod, 256, 256, animations));
     }
 
-
     if (!detectTouchscreen()) {
         //Detekce kliknutí na sprite ducha
         canvas.addEventListener('click', (e) => {
@@ -142,13 +141,6 @@ function detectTouchscreen() {
     }
     return result;
 }
-
-// function drawScore() {
-//     ctx.font = "28px arial";
-//     ctx.fillStyle = "red";
-//     ctx.textAlign = "center";
-//     ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height - 30);
-// }
 
 function drawInfo(text, color) {
     ctx.font = "28px arial";
@@ -204,7 +196,6 @@ function drawScoreBar() {
     ctx.lineTo(vericalInterpolation(bar.x, bar.x + bar.width, 0.75), bar.y + bar.height);
     ctx.stroke();
 
-
     ctx.strokeStyle = "white";
     ctx.lineWidth = 5;
     ctx.beginPath();
@@ -213,19 +204,29 @@ function drawScoreBar() {
     ctx.stroke();
 }
 
+// function checkHit() {
+//     for (const enemy of enemySprites) {
+//         if (enemy.isClicked(mousePosition.x, mousePosition.y)) {
+//             enemy.spriteStatus.isDevil = !enemy.spriteStatus.isDevil;
+//             enemy.hitSprite();
+//             // spell.pause()
+//             // spell.currentTime = 0;
+//             // spell.play();
+//             break;
+//         }
+//     }
+//     mousePosition.clicked = false;
+// }
+
 function checkHit() {
     for (const enemy of enemySprites) {
-        if (enemy.isClicked(mousePosition.x, mousePosition.y)) {
-            enemy.spriteStatus.isDevil = !enemy.spriteStatus.isDevil;
-            enemy.hitSprite();
-            // spell.pause()
-            // spell.currentTime = 0;
-            // spell.play();
-            break;
-        }
+        enemy.isClicked(mousePosition.x, mousePosition.y);
+        //mousePosition.clicked = false;
+        //return;
     }
     mousePosition.clicked = false;
 }
+
 
 function gameLoop() {
 
@@ -269,6 +270,7 @@ function spriteVerticalPosition(t) {
     const newPosition = 0 + (canvas.width - 0) * t;
     return newPosition;
 }
+
 function vericalInterpolation(x1, x2, t) {
     return x1 + (x2 - x1) * t;
 }

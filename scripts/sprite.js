@@ -8,16 +8,16 @@ class Sprite {
         this.xPosId;
         this.x;
 
-        this.y;       // Y pozice na hlavním canvasu
+        this.y;                // Y pozice na hlavním canvasu
         this.w = frameWidth;   // Šířka jednoho rámečku (framu)
         this.h = frameHeight;  // Výška jednoho rámečku (framu)
 
         // Animace: 
-        this.animationData = animationData; // Např. { walk: [{x: 0, y: 0}, {x: 48, y: 0}], idle: [...] }
+        this.animationData = animationData;
         this.currentAnimation = 'walk';
         this.currentFrameIndex;
-        this.frameCounter; // Pomocný čítač pro zpomalení animace (stagger)
-        this.frameSpeed = 6;   // Zpomalení: Měň rámeček každých 5 updatů
+        this.frameCounter;      // Pomocný čítač pro zpomalení animace (stagger)
+        this.frameSpeed = 6;    // Zpomalení: Měň rámeček každých 5 updatů
         this.scale;
         this.movespeed;
 
@@ -114,17 +114,11 @@ class Sprite {
         // 2. vykreslení vlastního canvasu do hlavního canvasu
         this.ctx.drawImage(
             this.mainCanvas,
-            this.x - this.scaledW / 2,              // dx: Cílová X-pozice na mainCtx
-            this.y,              // dy: Cílová Y-pozice na mainCtx
-            this.scaledW,        // dw: Cílová šířka
-            this.scaledH         // dh: Cílová výška
+            this.x - this.scaledW / 2,      // dx: Cílová X-pozice na hlavním canvasu od středu
+            this.y,                         // dy: Cílová Y-pozice na mainCtx
+            this.scaledW,                   // dw: Cílová šířka
+            this.scaledH                    // dh: Cílová výška
         );
-
-        // this.ctx.beginPath(); // Start a new path
-        // this.ctx.strokeStyle = "red";
-        // this.ctx.rect(this.x - this.scaledW / 2, this.y, this.scaledW, this.scaledH); // Add a rectangle to the current path
-        // this.ctx.stroke(); // Render the path
-
     }
 
     hitSprite() {
@@ -139,42 +133,19 @@ class Sprite {
     // --- METODA PRO DETEKCI KOLIZE MYŠI (PIXEL-PERFECT) ---
     isClicked(mouseX, mouseY) {
 
-        const area = 5;
         const startX = Math.floor(this.x - this.scaledW / 2);
         const endX = Math.floor(this.x + this.scaledW / 2);
 
-        // 1. Rychlá kontrola ohraničujícího rámečku (Bounding Box)
-        if (mouseX < startX ||
-            mouseX > endX ||
-            mouseY < this.y ||
-            mouseY > this.y + this.scaledH) {
-            return false;
-        }
         // kontrola kliknutí v rámečku
         if (mouseX > startX ||
             mouseX < endX ||
             mouseY > this.y ||
             mouseY < this.y + this.scaledH) {
-            return true;
+
+            this.spriteStatus.isDevil = !this.spriteStatus.isDevil;
+            this.hitSprite();
+            //return true;
         }
-
-        // // 2. Přepočet souřadnic myši na LOKÁLNÍ souřadnice UVNITŘ off-screen Canvasu (1:1)
-        // const localX = Math.floor((mouseX - startX) / this.scale);
-        // const localY = Math.floor((mouseY - this.y) / this.scale);
-
-        // // Ověření, že souřadnice jsou v rozsahu canvasu
-        // if (localX < 0 || localX >= this.w || localY < 0 || localY >= this.h) {
-        //     return false;
-        // }
-        // // 3. Kontrola alfa kanálu na off-screen Canvasu (Pixel-Perfect)
-        // const pixelData = this.mainCtx.getImageData(localX - 10, localY - 10, 20, 20).data;
-
-        // let soucetAlfa = 0;
-        // for (let index = 3; index < pixelData.length; index += 4) {
-        //     soucetAlfa += pixelData[index];
-        // }
-
-        // const prumer = soucetAlfa / (pixelData.length / 4);
-        // return prumer > 150;
+        //return false;
     }
 }
