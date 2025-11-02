@@ -11,18 +11,44 @@ btnStart.onclick = () => {
     initGame();
 }
 
+if (!detectTouchscreen()) {
+    //Detekce kliknutí na sprite ducha
+    canvas.addEventListener('click', (e) => {
+        e.preventDefault();
+        mousePosition.x = e.clientX - rect.left;
+        mousePosition.y = e.clientY - rect.top;
+        mousePosition.clicked = true;
+
+    });
+}
+else {
+    // Detekce dotyku na sprite ducha
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        e.touches[0]
+        mousePosition.x = e.touches[0].clientX - rect.left;
+        mousePosition.y = e.touches[0].clientY - rect.top;
+        mousePosition.clicked = true;
+
+    });
+}
+
+// herní proměnné
+let gameStatus = "waiting";
+let ghosts;
+let devilPercent;
+
+// sprite proměnné
 let enemySprites = [];
 let enemySpritesTable = [];
-
-let bgHeight;
-let mousePosition = { x: 0, y: 0, clicked: false };
 let speedMultipiler;
 let speedInterval;
 
-let gameStatus = "waiting";
+// pomocné proměnné
+let bgHeight;
+let mousePosition = { x: 0, y: 0, clicked: false };
 
-let ghosts;
-
+// načítání assetů (možno dotvořit ukazatel)
 let assetsToLoad = 6;
 function imageLoaded() {
     assetsToLoad--;
@@ -46,7 +72,6 @@ gameMusic.src = './audio/haunted-laughter-parade.mp3';
 gameMusic.loop = true;
 spell.src = './audio/spell.mp3'
 
-
 spriteSheetGod.onload = imageLoaded;
 spriteSheetDevil.onload = imageLoaded;
 sky.onload = imageLoaded;
@@ -56,13 +81,14 @@ spell.onload = imageLoaded;
 
 function initGame() {
 
+    ghosts = { ghostSum: 30, ghostGods: 3, ghostDevils: 25 };
+
     enemySpritesTable = [
         { id: 0, xPos: spriteVerticalPosition(0.12), used: false },
         { id: 1, xPos: spriteVerticalPosition(0.35), used: false },
         { id: 2, xPos: spriteVerticalPosition(0.66), used: false },
         { id: 3, xPos: spriteVerticalPosition(0.9), used: false }];
 
-    bgHeight = foreground.height * (canvas.width / foreground.width);
 
     const walkFrames = [
         { x: 0, y: 0 },
@@ -77,41 +103,19 @@ function initGame() {
 
     const animations = {
         walk: walkFrames,
-        idle: [{ x: 0, y: 0 }] // Může být jen jeden snímek
+        idle: [{ x: 0, y: 0 }] // Může být i jen jeden snímek (zatím nefunguje)
     };
+
+    bgHeight = foreground.height * (canvas.width / foreground.width);
 
     speedMultipiler = 1.2;
     speedInterval = setInterval(() => {
         speedMultipiler *= 1.2;
     }, 10000);
 
-    ghosts = { ghostSum: 30, ghostGods: 3, ghostDevils: 25 };
-
     enemySprites = [];
     for (let index = 0; index < enemySpritesTable.length; index++) {
         enemySprites.push(new Sprite(ctx, spriteSheetGod, 256, 256, animations));
-    }
-
-    if (!detectTouchscreen()) {
-        //Detekce kliknutí na sprite ducha
-        canvas.addEventListener('click', (e) => {
-            e.preventDefault();
-            mousePosition.x = e.clientX - rect.left;
-            mousePosition.y = e.clientY - rect.top;
-            mousePosition.clicked = true;
-
-        });
-    }
-    else {
-        // Detekce dotyku na sprite ducha
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            e.touches[0]
-            mousePosition.x = e.touches[0].clientX - rect.left;
-            mousePosition.y = e.touches[0].clientY - rect.top;
-            mousePosition.clicked = true;
-
-        });
     }
 
     gameMusic.play();
@@ -159,18 +163,7 @@ function drawScoreBar() {
         width: bartWidth,
         height: 25
     }
-    const devilPercent = ghosts.ghostDevils / ghosts.ghostSum;
-
-    if (devilPercent >= 0.75) {
-        btnStart.classList.remove('hiden');
-        gameStatus = "lose";
-    }
-
-    if (devilPercent <= 0.25) {
-        btnStart.classList.remove('hiden');
-        gameStatus = "win";
-    }
-
+    devilPercent = ghosts.ghostDevils / ghosts.ghostSum;
     let devilBarWidth = vericalInterpolation(0, bar.width, devilPercent);
 
     ctx.strokeStyle = "green";
@@ -204,29 +197,24 @@ function drawScoreBar() {
     ctx.stroke();
 }
 
-// function checkHit() {
-//     for (const enemy of enemySprites) {
-//         if (enemy.isClicked(mousePosition.x, mousePosition.y)) {
-//             enemy.spriteStatus.isDevil = !enemy.spriteStatus.isDevil;
-//             enemy.hitSprite();
-//             // spell.pause()
-//             // spell.currentTime = 0;
-//             // spell.play();
-//             break;
-//         }
-//     }
-//     mousePosition.clicked = false;
-// }
+function checkScore() {
+    if (devilPercent >= 0.75) {
+        btnStart.classList.remove('hiden');
+        gameStatus = "lose";
+    }
+
+    if (devilPercent <= 0.25) {
+        btnStart.classList.remove('hiden');
+        gameStatus = "win";
+    }
+}
 
 function checkHit() {
     for (const enemy of enemySprites) {
         enemy.isClicked(mousePosition.x, mousePosition.y);
-        //mousePosition.clicked = false;
-        //return;
     }
     mousePosition.clicked = false;
 }
-
 
 function gameLoop() {
 
@@ -246,7 +234,6 @@ function gameLoop() {
     }
     else {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         enemySprites.forEach(enemy => {
             enemy.update();
             enemy.draw();
@@ -261,6 +248,7 @@ function gameLoop() {
             0, -40, canvas.width, sky.height * (canvas.width / sky.width));
 
         drawScoreBar();
+        checkScore();
     }
     requestAnimationFrame(gameLoop);
 }

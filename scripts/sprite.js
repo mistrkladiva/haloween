@@ -62,7 +62,7 @@ class Sprite {
         this.currentFrameIndex = 0;
         this.frameCounter = 0;
 
-        // náhodný váběr god/devil 15% že bude god
+        // náhodný výběr god/devil 15% že bude god
         this.spriteStatus.isDevil = Math.random() >= 0.15 ? true : false;
         this.hitSprite();
     }
@@ -79,6 +79,8 @@ class Sprite {
             const frames = this.animationData[this.currentAnimation];
             this.currentFrameIndex = (this.currentFrameIndex + 1) % frames.length;
         }
+
+        console.log(this.y);
         // Posun ducha nahoru
         this.y -= this.movespeed;
         if (this.y <= -50) {
@@ -86,10 +88,8 @@ class Sprite {
             enemySpritesTable.find(x => x.id === this.xPosId).used = false;
             if (!this.spriteStatus.isDevil) {
                 ghosts.ghostGods++;
-                //score += 2;
             } else {
                 ghosts.ghostDevils++;
-                //score -= 2;
             }
             this.rebornSprite();
         }
@@ -130,22 +130,19 @@ class Sprite {
         }
     }
 
-    // --- METODA PRO DETEKCI KOLIZE MYŠI (PIXEL-PERFECT) ---
+    // --- METODA PRO DETEKCI KOLIZE MYŠI ---
     isClicked(mouseX, mouseY) {
-
         const startX = Math.floor(this.x - this.scaledW / 2);
         const endX = Math.floor(this.x + this.scaledW / 2);
-
-        // kontrola kliknutí v rámečku
-        if (mouseX > startX ||
-            mouseX < endX ||
-            mouseY > this.y ||
-            mouseY < this.y + this.scaledH) {
-
-            this.spriteStatus.isDevil = !this.spriteStatus.isDevil;
-            this.hitSprite();
-            //return true;
+        // 1. Rychlá kontrola ohraničujícího rámečku (Bounding Box)
+        // pokud není klik nad rámečkem return;
+        if (mouseX < startX ||
+            mouseX > endX ||
+            mouseY < this.y ||
+            mouseY > this.y + this.scaledH) {
+            return;
         }
-        //return false;
+        this.spriteStatus.isDevil = !this.spriteStatus.isDevil;
+        this.hitSprite();
     }
 }
