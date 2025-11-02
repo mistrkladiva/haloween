@@ -80,7 +80,6 @@ class Sprite {
             this.currentFrameIndex = (this.currentFrameIndex + 1) % frames.length;
         }
 
-        console.log(this.y);
         // Posun ducha nahoru
         this.y -= this.movespeed;
         if (this.y <= -50) {

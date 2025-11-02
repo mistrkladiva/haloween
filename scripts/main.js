@@ -51,9 +51,11 @@ let mousePosition = { x: 0, y: 0, clicked: false };
 // načítání assetů (možno dotvořit ukazatel)
 let assetsToLoad = 6;
 function imageLoaded() {
+    console.log("kkk");
     assetsToLoad--;
     if (assetsToLoad === 0) {
         console.log("All assets is loaded");
+        btnStart.disabled = false;
     }
 }
 
@@ -76,8 +78,8 @@ spriteSheetGod.onload = imageLoaded;
 spriteSheetDevil.onload = imageLoaded;
 sky.onload = imageLoaded;
 foreground.onload = imageLoaded;
-gameMusic.onload = imageLoaded;
-spell.onload = imageLoaded;
+gameMusic.oncanplay = imageLoaded;
+spell.oncanplay = imageLoaded;
 
 function initGame() {
 
