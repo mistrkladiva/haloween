@@ -23,12 +23,11 @@ let gameStatus = "waiting";
 
 let ghosts;
 
-let imagesToLoad = 6;
+let assetsToLoad = 6;
 function imageLoaded() {
-    imagesToLoad--;
-    if (imagesToLoad === 0) {
-        console.log("VŠECHNY OBRÁZKY JSOU ÚSPĚŠNĚ NAČTENY!");
-        //initGame();
+    assetsToLoad--;
+    if (assetsToLoad === 0) {
+        console.log("All assets is loaded");
     }
 }
 
@@ -39,12 +38,14 @@ const foreground = new Image();
 const gameMusic = new Audio()
 const spell = new Audio()
 
-spriteSheetGod.src = '/images/ghost-spritesheet-256.png';
-spriteSheetDevil.src = '/images/ghost-devil-spritesheet-256.png';
-sky.src = '/images/game-sky.png';
-foreground.src = '/images/game-bg.png';
-gameMusic.src = '/audio/haunted-laughter-parade.mp3'
-spell.src = '/audio/spell.mp3'
+spriteSheetGod.src = './images/ghost-spritesheet-256.png';
+spriteSheetDevil.src = './images/ghost-devil-spritesheet-256.png';
+sky.src = './images/game-sky.png';
+foreground.src = './images/game-bg.png';
+gameMusic.src = './audio/haunted-laughter-parade.mp3';
+gameMusic.loop = true;
+spell.src = './audio/spell.mp3'
+
 
 spriteSheetGod.onload = imageLoaded;
 spriteSheetDevil.onload = imageLoaded;
@@ -91,18 +92,55 @@ function initGame() {
         enemySprites.push(new Sprite(ctx, spriteSheetGod, 256, 256, animations));
     }
 
-    // Detekce kliknutí na sprite ducha
-    canvas.addEventListener('click', (e) => {
-        e.preventDefault();
-        mousePosition.x = e.clientX - rect.left;
-        mousePosition.y = e.clientY - rect.top;
-        mousePosition.clicked = true;
 
-    });
+    if (!detectTouchscreen()) {
+        //Detekce kliknutí na sprite ducha
+        canvas.addEventListener('click', (e) => {
+            e.preventDefault();
+            mousePosition.x = e.clientX - rect.left;
+            mousePosition.y = e.clientY - rect.top;
+            mousePosition.clicked = true;
+
+        });
+    }
+    else {
+        // Detekce dotyku na sprite ducha
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.touches[0]
+            mousePosition.x = e.touches[0].clientX - rect.left;
+            mousePosition.y = e.touches[0].clientY - rect.top;
+            mousePosition.clicked = true;
+
+        });
+    }
 
     gameMusic.play();
     gameStatus = "run";
     gameLoop();
+}
+
+// 1. If Pointer Events are supported, it will just check the navigator.maxTouchPoints property
+// 2. If Pointer Events are not supported, it checks the any-pointer:coarse interaction media feature using window.matchMedia.
+// 3. Check for Touch Events support
+function detectTouchscreen() {
+    var result = false;
+    if (window.PointerEvent && ('maxTouchPoints' in navigator)) {
+        // if Pointer Events are supported, just check maxTouchPoints
+        if (navigator.maxTouchPoints > 0) {
+            result = true;
+        }
+    } else {
+        // no Pointer Events...
+        if (window.matchMedia && window.matchMedia("(any-pointer:coarse)").matches) {
+            // check for any-pointer:coarse which mostly means touchscreen
+            result = true;
+        } else if (window.TouchEvent || ('ontouchstart' in window)) {
+            // last resort - check for exposed touch events API / event handler
+            result = true;
+        }
+    }
+    return result;
 }
 
 // function drawScore() {
