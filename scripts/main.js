@@ -5,9 +5,10 @@ canvas.height = window.innerHeight;
 const rect = canvas.getBoundingClientRect();
 const ctx = canvas.getContext('2d');
 const btnStart = document.getElementById('btnStart');
+const menuContainer = document.getElementById('menu-container');
 
 btnStart.onclick = () => {
-    btnStart.classList.add('hiden');
+    menuContainer.style.display = "none";
     initGame();
 }
 
@@ -39,13 +40,11 @@ else {
 }
 
 // herní proměnné
-let gameStatus = "waiting";
 let ghosts;
-let devilPercent;
 
 // sprite proměnné
 let enemySprites = [];
-let enemySpritesTable = [];
+let enemySlotsTable = [];
 let speedMultipiler;
 let speedInterval;
 
@@ -54,9 +53,8 @@ let bgHeight;
 let mousePosition = { x: 0, y: 0, clicked: false };
 
 // načítání assetů (možno dotvořit ukazatel)
-let assetsToLoad = 6;
+let assetsToLoad = 5;
 function imageLoaded() {
-    console.log("kkk");
     assetsToLoad--;
     if (assetsToLoad === 0) {
         console.log("All assets is loaded");
@@ -64,23 +62,20 @@ function imageLoaded() {
     }
 }
 
-const spriteSheetGod = new Image();
-const spriteSheetDevil = new Image();
+const ghostSpritesheet = new Image();
 const sky = new Image();
 const foreground = new Image();
 const gameMusic = new Audio()
 const spell = new Audio()
 
-spriteSheetGod.src = './images/god-spritesheet-256.png';
-spriteSheetDevil.src = './images/devil-spritesheet-256.png';
+ghostSpritesheet.src = './images/ghost-complete-spritesheet-256.png';
 sky.src = './images/game-sky.png';
 foreground.src = './images/game-bg.png';
 gameMusic.src = './audio/haunted-laughter-parade.mp3';
 gameMusic.loop = true;
 spell.src = './audio/spell.mp3'
 
-spriteSheetGod.onload = imageLoaded;
-spriteSheetDevil.onload = imageLoaded;
+ghostSpritesheet.onload = imageLoaded;
 sky.onload = imageLoaded;
 foreground.onload = imageLoaded;
 gameMusic.oncanplay = imageLoaded;
@@ -88,15 +83,21 @@ spell.oncanplay = imageLoaded;
 
 function initGame() {
 
-    ghosts = { ghostSum: 30, ghostGods: 3, ghostDevils: 25 };
+    ghosts = {
+        ghostSum: 30,
+        ghostGods: 3,
+        ghostDevils: 25,
+        getDevilPercent: function () { return this.ghostDevils / this.ghostSum }
+    };
 
-    enemySpritesTable = [
-        { id: 0, xPos: spriteVerticalPosition(0.12), used: false },
-        { id: 1, xPos: spriteVerticalPosition(0.35), used: false },
-        { id: 2, xPos: spriteVerticalPosition(0.66), used: false },
-        { id: 3, xPos: spriteVerticalPosition(0.9), used: false }];
+    enemySlotsTable = [
+        { id: 0, xPos: vericalInterpolation(0, canvas.width, 0.12), used: false },
+        { id: 1, xPos: vericalInterpolation(0, canvas.width, 0.35), used: false },
+        { id: 2, xPos: vericalInterpolation(0, canvas.width, 0.66), used: false },
+        { id: 3, xPos: vericalInterpolation(0, canvas.width, 0.9), used: false }
+    ];
 
-    const walkFrames = [
+    const god = [
         { x: 0, y: 0 },
         { x: 1 * 256, y: 0 },
         { x: 2 * 256, y: 0 },
@@ -107,9 +108,20 @@ function initGame() {
         { x: 7 * 256, y: 0 },
     ];
 
+    const devil = [
+        { x: 0, y: 256 },
+        { x: 1 * 256, y: 256 },
+        { x: 2 * 256, y: 256 },
+        { x: 3 * 256, y: 256 },
+        { x: 4 * 256, y: 256 },
+        { x: 5 * 256, y: 256 },
+        { x: 6 * 256, y: 256 },
+        { x: 7 * 256, y: 256 },
+    ];
+
     const animations = {
-        walk: walkFrames,
-        idle: [{ x: 0, y: 0 }] // Může být i jen jeden snímek (zatím nefunguje)
+        godAnimation: god,
+        devilAnimation: devil // Může být i jen jeden snímek (zatím nefunguje)
     };
 
     bgHeight = foreground.height * (canvas.width / foreground.width);
@@ -120,12 +132,11 @@ function initGame() {
     }, 10000);
 
     enemySprites = [];
-    for (let index = 0; index < enemySpritesTable.length; index++) {
-        enemySprites.push(new Sprite(ctx, spriteSheetGod, 256, 256, enemySpritesTable, animations));
+    for (let index = 0; index < enemySlotsTable.length; index++) {
+        enemySprites.push(new Sprite(ctx, ghostSpritesheet, 256, 256, enemySlotsTable, animations));
     }
 
     gameMusic.play();
-    gameStatus = "run";
     gameLoop();
 }
 
@@ -153,15 +164,20 @@ function detectTouchscreen() {
 }
 
 function drawInfo(text, color) {
+
+    menuContainer.style.display = "flex";
+    clearInterval(speedInterval);
+
     const fontSize = 28;
+    ctx.font = `${fontSize}px arial`;
+
+    const metrics = ctx.measureText(text);
+    const textWidth = metrics.width;
+
     const textPosition = {
         x: canvas.width / 2,
         y: canvas.height / 2 - 100
     }
-
-    ctx.font = `${fontSize}px arial`;
-    const metrics = ctx.measureText(text);
-    const textWidth = metrics.width;
 
     const bgRectangleOffset = 20;
     const bgRectangle = {
@@ -171,12 +187,17 @@ function drawInfo(text, color) {
         height: fontSize + 2 * bgRectangleOffset
     }
 
+    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.beginPath();
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fill();
 
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.fillRect(bgRectangle.x, bgRectangle.y, bgRectangle.width, bgRectangle.height);
+    ctx.roundRect(bgRectangle.x, bgRectangle.y, bgRectangle.width, bgRectangle.height, 10);
+    ctx.fill();
 
-    ctx.fillStyle = "white";
+    ctx.fillStyle = "rgba(213, 213, 213, 1)";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.beginPath();
@@ -193,8 +214,8 @@ function drawScoreBar() {
         width: bartWidth,
         height: 25
     }
-    devilPercent = ghosts.ghostDevils / ghosts.ghostSum;
-    let devilBarWidth = vericalInterpolation(0, bar.width, devilPercent);
+
+    let devilBarWidth = vericalInterpolation(0, bar.width, ghosts.getDevilPercent());
 
     ctx.strokeStyle = "green";
     ctx.fillStyle = "green";
@@ -227,18 +248,6 @@ function drawScoreBar() {
     ctx.stroke();
 }
 
-function checkScore() {
-    if (devilPercent >= 0.75) {
-        btnStart.classList.remove('hiden');
-        gameStatus = "lose";
-    }
-
-    if (devilPercent <= 0.25) {
-        btnStart.classList.remove('hiden');
-        gameStatus = "win";
-    }
-}
-
 function checkHit() {
     for (const enemy of enemySprites) {
         enemy.isClicked(mousePosition.x, mousePosition.y);
@@ -248,14 +257,13 @@ function checkHit() {
 
 function gameLoop() {
 
-    if (gameStatus === "lose") {
-        clearInterval(speedInterval);
-        drawInfo("Nebe teď ovládá peklo!", "red");
+    if (ghosts.getDevilPercent() >= 0.75) {
+        drawInfo("Nebe teď ovládá peklo!", "rgba(255, 0, 0, 0.8)");
         return;
     }
-    if (gameStatus === "win") {
-        clearInterval(speedInterval);
-        drawInfo("V nebi je klid a mír.", "green");
+
+    if (ghosts.getDevilPercent() <= 0.25) {
+        drawInfo("V nebi je klid a mír.", "rgba(0, 255, 0, 0.8)");
         return;
     }
 
@@ -278,17 +286,11 @@ function gameLoop() {
             0, -40, canvas.width, sky.height * (canvas.width / sky.width));
 
         drawScoreBar();
-        checkScore();
     }
     requestAnimationFrame(gameLoop);
 }
 
-// interpolace na šířku canvasu
-function spriteVerticalPosition(t) {
-    const newPosition = 0 + (canvas.width - 0) * t;
-    return newPosition;
-}
-
+// interpolace
 function vericalInterpolation(x1, x2, t) {
     return x1 + (x2 - x1) * t;
 }

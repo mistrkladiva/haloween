@@ -1,5 +1,5 @@
 class Sprite {
-    constructor(ctx, image, frameWidth, frameHeight, enemySpritesTable, animationData) {
+    constructor(ctx, image, frameWidth, frameHeight, enemySlotsTable, animationData) {
         this.ctx = ctx;
         this.image = image;
 
@@ -13,9 +13,9 @@ class Sprite {
         this.h = frameHeight;  // Výška jednoho rámečku (framu)
 
         // Animace:
-        this.enemySpritesTable = enemySpritesTable;
+        this.enemySlotsTable = enemySlotsTable;
         this.animationData = animationData;
-        this.currentAnimation = 'walk';
+        this.currentAnimation = 'godAnimation';
         this.currentFrameIndex;
         this.frameCounter;      // Pomocný čítač pro zpomalení animace (stagger)
         this.frameSpeed = 6;    // Zpomalení: Měň rámeček každých 5 updatů
@@ -49,7 +49,7 @@ class Sprite {
         this.scaledW = Math.floor(this.w * this.scale);
         this.scaledH = Math.floor(this.h * this.scale);
 
-        this.xPosTable = this.enemySpritesTable.filter(x => x.used === false);
+        this.xPosTable = this.enemySlotsTable.filter(x => x.used === false);
         if (this.xPosTable.length <= 0) {
             return;
         }
@@ -58,7 +58,7 @@ class Sprite {
         this.xPosId = this.xPosObject.id;
         this.x = this.xPosObject.xPos;
         this.y = canvas.height - bgHeight;
-        this.enemySpritesTable.find(x => x.id === this.xPosId).used = true;
+        this.enemySlotsTable.find(x => x.id === this.xPosId).used = true;
 
         this.currentFrameIndex = 0;
         this.frameCounter = 0;
@@ -85,7 +85,7 @@ class Sprite {
         this.y -= this.movespeed;
         if (this.y <= -50) {
             this.y = canvas.height - bgHeight;
-            this.enemySpritesTable.find(x => x.id === this.xPosId).used = false;
+            this.enemySlotsTable.find(x => x.id === this.xPosId).used = false;
             if (!this.spriteStatus.isDevil) {
                 ghosts.ghostGods++;
             } else {
@@ -123,10 +123,12 @@ class Sprite {
 
     hitSprite() {
         if (this.spriteStatus.isDevil) {
-            this.image = spriteSheetDevil;
+            //this.image = spriteSheetDevil;
+            this.currentAnimation = "devilAnimation";
         }
         else {
-            this.image = spriteSheetGod;
+            //this.image = spriteSheetGod;
+            this.currentAnimation = "godAnimation"
         }
     }
 
