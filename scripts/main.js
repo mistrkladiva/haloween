@@ -11,6 +11,11 @@ btnStart.onclick = () => {
     initGame();
 }
 
+if (!canvas || !btnStart) {
+    console.error("Canvas nebo btnStart nebyl nalezen v DOM!");
+    // případně ukonči inicializaci
+}
+
 if (!detectTouchscreen()) {
     //Detekce kliknutí na sprite ducha
     canvas.addEventListener('click', (e) => {
@@ -25,11 +30,11 @@ else {
     // Detekce dotyku na sprite ducha
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        e.touches[0]
-        mousePosition.x = e.touches[0].clientX - rect.left;
-        mousePosition.y = e.touches[0].clientY - rect.top;
-        mousePosition.clicked = true;
-
+        if (e.touches && e.touches.length > 0) {
+            mousePosition.x = e.touches[0].clientX - rect.left;
+            mousePosition.y = e.touches[0].clientY - rect.top;
+            mousePosition.clicked = true;
+        }
     });
 }
 
@@ -66,8 +71,8 @@ const foreground = new Image();
 const gameMusic = new Audio()
 const spell = new Audio()
 
-spriteSheetGod.src = './images/ghost-spritesheet-256.png';
-spriteSheetDevil.src = './images/ghost-devil-spritesheet-256.png';
+spriteSheetGod.src = './images/god-spritesheet-256.png';
+spriteSheetDevil.src = './images/devil-spritesheet-256.png';
 sky.src = './images/game-sky.png';
 foreground.src = './images/game-bg.png';
 gameMusic.src = './audio/haunted-laughter-parade.mp3';
@@ -91,7 +96,6 @@ function initGame() {
         { id: 2, xPos: spriteVerticalPosition(0.66), used: false },
         { id: 3, xPos: spriteVerticalPosition(0.9), used: false }];
 
-
     const walkFrames = [
         { x: 0, y: 0 },
         { x: 1 * 256, y: 0 },
@@ -100,7 +104,7 @@ function initGame() {
         { x: 4 * 256, y: 0 },
         { x: 5 * 256, y: 0 },
         { x: 6 * 256, y: 0 },
-        { x: 1 * 256, y: 0 },
+        { x: 7 * 256, y: 0 },
     ];
 
     const animations = {
@@ -117,7 +121,7 @@ function initGame() {
 
     enemySprites = [];
     for (let index = 0; index < enemySpritesTable.length; index++) {
-        enemySprites.push(new Sprite(ctx, spriteSheetGod, 256, 256, animations));
+        enemySprites.push(new Sprite(ctx, spriteSheetGod, 256, 256, enemySpritesTable, animations));
     }
 
     gameMusic.play();
@@ -149,10 +153,34 @@ function detectTouchscreen() {
 }
 
 function drawInfo(text, color) {
-    ctx.font = "28px arial";
+    const fontSize = 28;
+    const textPosition = {
+        x: canvas.width / 2,
+        y: canvas.height / 2 - 100
+    }
+
+    ctx.font = `${fontSize}px arial`;
+    const metrics = ctx.measureText(text);
+    const textWidth = metrics.width;
+
+    const bgRectangleOffset = 20;
+    const bgRectangle = {
+        x: textPosition.x - textWidth / 2 - bgRectangleOffset,
+        y: textPosition.y - fontSize / 2 - bgRectangleOffset,
+        width: textWidth + 2 * bgRectangleOffset,
+        height: fontSize + 2 * bgRectangleOffset
+    }
+
+
     ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.fillRect(bgRectangle.x, bgRectangle.y, bgRectangle.width, bgRectangle.height);
+
+    ctx.fillStyle = "white";
     ctx.textAlign = "center";
-    ctx.fillText(text, canvas.width / 2, canvas.height / 2 - 100);
+    ctx.textBaseline = "middle";
+    ctx.beginPath();
+    ctx.fillText(text, textPosition.x, textPosition.y);
 }
 
 function drawScoreBar() {
@@ -222,12 +250,12 @@ function gameLoop() {
 
     if (gameStatus === "lose") {
         clearInterval(speedInterval);
-        drawInfo("Nebe teď ovládá peklo!", "white");
+        drawInfo("Nebe teď ovládá peklo!", "red");
         return;
     }
     if (gameStatus === "win") {
         clearInterval(speedInterval);
-        drawInfo("V nebi je klid a mír.", "white");
+        drawInfo("V nebi je klid a mír.", "green");
         return;
     }
 

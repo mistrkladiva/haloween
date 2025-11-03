@@ -1,5 +1,5 @@
 class Sprite {
-    constructor(ctx, image, frameWidth, frameHeight, animationData) {
+    constructor(ctx, image, frameWidth, frameHeight, enemySpritesTable, animationData) {
         this.ctx = ctx;
         this.image = image;
 
@@ -12,7 +12,8 @@ class Sprite {
         this.w = frameWidth;   // Šířka jednoho rámečku (framu)
         this.h = frameHeight;  // Výška jednoho rámečku (framu)
 
-        // Animace: 
+        // Animace:
+        this.enemySpritesTable = enemySpritesTable;
         this.animationData = animationData;
         this.currentAnimation = 'walk';
         this.currentFrameIndex;
@@ -48,7 +49,7 @@ class Sprite {
         this.scaledW = Math.floor(this.w * this.scale);
         this.scaledH = Math.floor(this.h * this.scale);
 
-        this.xPosTable = enemySpritesTable.filter(x => x.used === false);
+        this.xPosTable = this.enemySpritesTable.filter(x => x.used === false);
         if (this.xPosTable.length <= 0) {
             return;
         }
@@ -57,7 +58,7 @@ class Sprite {
         this.xPosId = this.xPosObject.id;
         this.x = this.xPosObject.xPos;
         this.y = canvas.height - bgHeight;
-        enemySpritesTable.find(x => x.id === this.xPosId).used = true;
+        this.enemySpritesTable.find(x => x.id === this.xPosId).used = true;
 
         this.currentFrameIndex = 0;
         this.frameCounter = 0;
@@ -84,7 +85,7 @@ class Sprite {
         this.y -= this.movespeed;
         if (this.y <= -50) {
             this.y = canvas.height - bgHeight;
-            enemySpritesTable.find(x => x.id === this.xPosId).used = false;
+            this.enemySpritesTable.find(x => x.id === this.xPosId).used = false;
             if (!this.spriteStatus.isDevil) {
                 ghosts.ghostGods++;
             } else {
