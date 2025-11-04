@@ -12,13 +12,13 @@ btnStart.onclick = () => {
     initGame();
 }
 
-if (!canvas || !btnStart) {
-    console.error("Canvas nebo btnStart nebyl nalezen v DOM!");
-    // případně ukonči inicializaci
+if (!canvas || !btnStart || !menuContainer) {
+    console.error("Některý DOM element nebyl nalezen.");
+    btnStart.disabled = true;
 }
 
+// event událostí podle zařízení
 if (!detectTouchscreen()) {
-    //Detekce kliknutí na sprite ducha
     canvas.addEventListener('click', (e) => {
         e.preventDefault();
         mousePosition.x = e.clientX - rect.left;
@@ -28,7 +28,6 @@ if (!detectTouchscreen()) {
     });
 }
 else {
-    // Detekce dotyku na sprite ducha
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
         if (e.touches && e.touches.length > 0) {
@@ -40,7 +39,7 @@ else {
 }
 
 // herní proměnné
-let ghosts;
+let ghostsStatistic;
 
 // sprite proměnné
 let enemySprites = [];
@@ -83,7 +82,7 @@ spell.oncanplay = imageLoaded;
 
 function initGame() {
 
-    ghosts = {
+    ghostsStatistic = {
         ghostSum: 30,
         ghostGods: 3,
         ghostDevils: 25,
@@ -97,31 +96,27 @@ function initGame() {
         { id: 3, xPos: vericalInterpolation(0, canvas.width, 0.9), used: false }
     ];
 
-    const god = [
-        { x: 0, y: 0 },
-        { x: 1 * 256, y: 0 },
-        { x: 2 * 256, y: 0 },
-        { x: 3 * 256, y: 0 },
-        { x: 4 * 256, y: 0 },
-        { x: 5 * 256, y: 0 },
-        { x: 6 * 256, y: 0 },
-        { x: 7 * 256, y: 0 },
-    ];
-
-    const devil = [
-        { x: 0, y: 256 },
-        { x: 1 * 256, y: 256 },
-        { x: 2 * 256, y: 256 },
-        { x: 3 * 256, y: 256 },
-        { x: 4 * 256, y: 256 },
-        { x: 5 * 256, y: 256 },
-        { x: 6 * 256, y: 256 },
-        { x: 7 * 256, y: 256 },
-    ];
-
     const animations = {
-        godAnimation: god,
-        devilAnimation: devil // Může být i jen jeden snímek (zatím nefunguje)
+        godAnimation: [
+            { x: 0, y: 0 },
+            { x: 1 * 256, y: 0 },
+            { x: 2 * 256, y: 0 },
+            { x: 3 * 256, y: 0 },
+            { x: 4 * 256, y: 0 },
+            { x: 5 * 256, y: 0 },
+            { x: 6 * 256, y: 0 },
+            { x: 7 * 256, y: 0 },
+        ],
+        devilAnimation: [
+            { x: 0, y: 256 },
+            { x: 1 * 256, y: 256 },
+            { x: 2 * 256, y: 256 },
+            { x: 3 * 256, y: 256 },
+            { x: 4 * 256, y: 256 },
+            { x: 5 * 256, y: 256 },
+            { x: 6 * 256, y: 256 },
+            { x: 7 * 256, y: 256 },
+        ]
     };
 
     bgHeight = foreground.height * (canvas.width / foreground.width);
@@ -133,7 +128,7 @@ function initGame() {
 
     enemySprites = [];
     for (let index = 0; index < enemySlotsTable.length; index++) {
-        enemySprites.push(new Sprite(ctx, ghostSpritesheet, 256, 256, enemySlotsTable, animations));
+        enemySprites.push(new Sprite(ctx, ghostSpritesheet, 256, 256, enemySlotsTable, animations, ghostsStatistic));
     }
 
     gameMusic.play();
@@ -215,7 +210,7 @@ function drawScoreBar() {
         height: 25
     }
 
-    let devilBarWidth = vericalInterpolation(0, bar.width, ghosts.getDevilPercent());
+    let devilBarWidth = vericalInterpolation(0, bar.width, ghostsStatistic.getDevilPercent());
 
     ctx.strokeStyle = "green";
     ctx.fillStyle = "green";
@@ -257,12 +252,12 @@ function checkHit() {
 
 function gameLoop() {
 
-    if (ghosts.getDevilPercent() >= 0.75) {
+    if (ghostsStatistic.getDevilPercent() >= 0.75) {
         drawInfo("Nebe teď ovládá peklo!", "rgba(255, 0, 0, 0.8)");
         return;
     }
 
-    if (ghosts.getDevilPercent() <= 0.25) {
+    if (ghostsStatistic.getDevilPercent() <= 0.25) {
         drawInfo("V nebi je klid a mír.", "rgba(0, 255, 0, 0.8)");
         return;
     }
