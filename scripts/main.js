@@ -6,6 +6,7 @@ const rect = canvas.getBoundingClientRect();
 const ctx = canvas.getContext('2d');
 const btnStart = document.getElementById('btnStart');
 const menuContainer = document.getElementById('menu-container');
+const loadingText = document.getElementById('loading');
 
 btnStart.onclick = () => {
     menuContainer.style.display = "none";
@@ -55,8 +56,10 @@ let mousePosition = { x: 0, y: 0, clicked: false };
 let assetsToLoad = 5;
 function imageLoaded() {
     assetsToLoad--;
+    loadingText.innerText = `Nahrávám data: ${assetsToLoad} / 5`;
     if (assetsToLoad === 0) {
         console.log("All assets is loaded");
+        loadingText.style.display = 'none';
         btnStart.disabled = false;
     }
 }
