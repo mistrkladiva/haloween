@@ -13,7 +13,7 @@ btnStart.onclick = () => {
     initGame();
 }
 
-if (!canvas || !btnStart || !menuContainer) {
+if (!canvas || !btnStart || !menuContainer || loadingText) {
     console.error("Některý DOM element nebyl nalezen.");
     btnStart.disabled = true;
 }
