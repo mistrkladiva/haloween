@@ -17,7 +17,6 @@ if (!canvas || !btnStart || !menuContainer || loadingText) {
     console.error("Některý DOM element nebyl nalezen.");
     btnStart.disabled = true;
 }
-console.log("neco");
 
 // event událostí podle zařízení
 if (!detectTouchscreen()) {
